@@ -2,27 +2,34 @@ import socket
 import struct
 import scapy.all as sc
 
-'''
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((socket.gethostname(),2068))
-message="Client started, listening for offer requests...\n"
-client.send(message.encode())#,(serverName, serverPort))
-while True:
-    from_server = client.recv(4096)
-    if not from_server:
-        break
-    print(from_server.decode("utf-8"))
-client.close()
-'''
-print(sc.get_if_addr('eth1'))
-client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) # UDP
-client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST , 1)
-# Enable broadcasting mode
-client.bind(("", 13117))
-mreq=struct.pack("4sl", socket.inet_aton(socket.gethostbyname(socket.gethostname())),socket.INADDR_ANY)
-client.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP , 1)
+my_name = "noam&shiri\n"
 
+def search_offer():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    s.bind(('',13117))
+    print("Client started, listening for offer requests...")
+    curr_port=0
+    curr_ip=0
+    while curr_port!=2068: #True: ???
+        try:
+            packet = s.recvfrom(13117) # לבדוק שמתחיל עם מג'יק קוקי ולעשות אנפק עם הסטרקט 
+            if str(packet[0]).startswith(r"b'\xab\xcd\xdc\xba\x02"):
+                unpacked = struct.unpack('>IbH',packet[0])
+                curr_port=unpacked[2]
+                curr_ip=packet[1][0]
+        except struct.error as e:
+            print("recieved error: ("+str(e)+") from port: " +str(curr_port) ) ##?????????
+            continue
+    return curr_ip,curr_port
 
-while True:
-    data, addr = client.recvfrom(1024)
-    print("received message: %s"%data)
+def connecting_to_server(ip,port):
+    print("Received offer from "+str(ip)+", attempting to connect...")
+    tcp_server= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    host=socket.gethostbyname(socket.gethostname())
+    tcp_server.bind((host,port))
+    #tcp_server.sendto(my_name.encode(), (host,port))
+
+#main:
+ip,port = search_offer()
+connecting_to_server(ip,port)
