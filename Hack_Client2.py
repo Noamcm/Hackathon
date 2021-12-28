@@ -3,7 +3,7 @@ import struct
 import scapy.all as sc
 import sys, errno
 
-my_name = "noam\n"
+my_name = "shiri\n"
 
 def search_offer():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
