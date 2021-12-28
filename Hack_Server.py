@@ -21,13 +21,17 @@ host=socket.gethostbyname(socket.gethostname())
 udp_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 udp_server.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 tcp_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+tcp_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #to avoid OSError: [Errno 98] Address already in use
 tcp_server.bind((host,port))
 player_num=0
+players=[]
+
 
 def main():
     while True: 
         #players=[]
         global player_num
+        global players
         tcp_server.listen(2) 
         my_threads=[]
         my_threads.append(threading.Thread(target=search_two_clients, args=()))
@@ -42,20 +46,29 @@ def main():
 
 def connect_to_client():
     global player_num
-    print("after listen")
+    global players
     Client, address = tcp_server.accept() 
     packet = Client.recv(1024).decode()
     player_num+=1
     p=Player(player_num,packet,address,Client)
-    #players.append(p)
-    welcome_Message="Welcome to Quick Maths.\n"
-    Client.send(welcome_Message.encode()) #only if two clients! #TODO check!
-    time.sleep(10)
+    players.append(p)
+    while player_num<2:
+        print("waiting for second player...")
+        time.sleep(1)
     starts_game(p)
 
 def starts_game(player):
-    print("Player "+str(player.number)+": "+str(player.name))
-    time.sleep(3)
+    global players
+    time.sleep(3) #10 seconds timer until the game begins
+    Player_Message="Welcome to Quick Maths.\n"
+    for p in players:
+        Player_Message+="Player "+str(p.number)+": "+str(p.name)
+    Player_Message+="==\nPlease answer the following question as fast as you can:\nHow much is 2+2?\n"
+    player.client.send(Player_Message.encode())
+    #add 10 seconds timer for answer
+    print("waiting for char....")
+    answer = player.client.recv(1024).decode()
+    print(player.name , answer)
 
 
 def search_two_clients():
@@ -71,6 +84,5 @@ def search_two_clients():
         udp_server.sendto(message, ('<broadcast>', 13117)) 
         #print("message sent!")
         time.sleep(1)
-
 
 main()

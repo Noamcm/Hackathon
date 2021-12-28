@@ -2,8 +2,9 @@ import socket
 import struct
 import scapy.all as sc
 import sys, errno
+from getch import getch, getche
 
-my_name = "noam\n"
+my_name = "Noam\n"
 
 def search_offer():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -22,32 +23,37 @@ def search_offer():
         except struct.error as e:
             print("recieved error: ("+str(e)+") from port: " +str(curr_port) ) ##?????????
             continue
-    return curr_ip,curr_port
-
-def gameMode():
-    while True:
-        time.sleep(10)
+    connecting_to_server(curr_ip,curr_port)
 
 def connecting_to_server(ip,port):
     print("Received offer from "+str(ip)+", attempting to connect...")
     tcp_server= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host=socket.gethostbyname(socket.gethostname())
     tcp_server.connect((host,port))
-    #tcp_server.bind((host,port))
     tcp_server.sendto(my_name.encode(), (host,port))
     while True:
         try:
             data = str(tcp_server.recv(1024).decode())
             print(data)
             if data.startswith("Welcome"):
-                gameMode()
+                gameMode(tcp_server)
                 break
         except OSError as e:
             print(str(e))
             pass
         
+def gameMode(tcp_server):
+    data = str(tcp_server.recv(1024).decode())
+    print(data)
+    print("what now?")
+    test="test"
+    print(test)
+    tcp_server.sendto(test.encode(),tcp_server.getpeername())
+    time.sleep(10)
+    #data = str(tcp_server.recv(1024).decode())
+    #print(data)
+
 
 
 #main:
-ip,port = search_offer()
-connecting_to_server(ip,port)
+search_offer()
