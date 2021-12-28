@@ -3,8 +3,8 @@ import socket
 import os
 from _thread import *
 import time
-import threading
-from concurrent.futures import ThreadPoolExecutor
+from threading import Thread
+import concurrent.futures
 import struct
 import scapy.all
 
@@ -33,15 +33,25 @@ def main():
         global player_num
         global players
         tcp_server.listen(2) 
+        
         my_threads=[]
-        my_threads.append(threading.Thread(target=search_two_clients, args=()))
-        my_threads.append(threading.Thread(target=connect_to_client, args=()))
-        my_threads.append(threading.Thread(target=connect_to_client, args=()))
+        #my_threads.append(Thread(target=search_two_clients, args=()))
+        my_threads.append(Thread(target=connect_to_client, daemon=True))
+        my_threads.append(Thread(target=connect_to_client, daemon=True))
         for t in my_threads:
             t.start()
+        search_two_clients()
         for t in my_threads:
             t.join()
-    
+        '''
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            futures.append(executor.submit(search_two_clients))
+            futures.append(executor.submit(connect_to_client))
+            futures.append(executor.submit(connect_to_client))
+            for t in concurrent.futures.as_completed(futures):
+                print(future.result())
+        '''
 
 
 def connect_to_client():
@@ -60,13 +70,14 @@ def connect_to_client():
 def starts_game(player):
     global players
     time.sleep(3) #10 seconds timer until the game begins
-    Player_Message="Welcome to Quick Maths.\n"
+    Player_Message="PLEASE GET OFF THIS PORT!!!!!!!!!!!!!!!!!!!!!\nWelcome to Quick Maths.\n"
     for p in players:
         Player_Message+="Player "+str(p.number)+": "+str(p.name)
     Player_Message+="==\nPlease answer the following question as fast as you can:\nHow much is 2+2?\n"
     player.client.send(Player_Message.encode())
     #add 10 seconds timer for answer
     print("waiting for char....")
+    time.sleep(10) #10 seconds timer until the game begins
     answer = player.client.recv(1024).decode()
     print(player.name , answer)
 
