@@ -161,7 +161,6 @@ def starts_game(player,q):
                     break
             elif has_answer:
                 break
-            time.sleep(1)
     except socket.error as er:
         print(colored("recieved error: (" + str(er) + ") in starts_game",'red'))
         return
