@@ -45,15 +45,10 @@ def connecting_to_server(ip,port):
             pass
         
 def gameMode(tcp_server):
+    char = getche()
+    tcp_server.sendto(char.encode(),tcp_server.getpeername())
     data = str(tcp_server.recv(1024).decode())
-    print("what now?")
     print(data)
-    test="test2"
-    print(test)
-    tcp_server.sendto(test.encode(),tcp_server.getpeername())
-    time.sleep(10)
-    #data = str(tcp_server.recv(1024).decode())
-    #print(data)
 
 
 

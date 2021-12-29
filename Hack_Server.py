@@ -5,6 +5,7 @@ from _thread import *
 import time
 from threading import Thread
 import concurrent.futures
+import select
 import struct
 import scapy.all
 
@@ -25,17 +26,17 @@ tcp_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #to avoid OSErr
 tcp_server.bind((host,port))
 player_num=0
 players=[]
-
+final_Message=""
+has_answer=False
 
 def main():
     while True: 
         #players=[]
         global player_num
-        global players
-        tcp_server.listen(2) 
-        
+        global players   
         my_threads=[]
-        #my_threads.append(Thread(target=search_two_clients, args=()))
+        tcp_server.listen(2) 
+        print("starting main")
         my_threads.append(Thread(target=connect_to_client, daemon=True))
         my_threads.append(Thread(target=connect_to_client, daemon=True))
         for t in my_threads:
@@ -43,16 +44,7 @@ def main():
         search_two_clients()
         for t in my_threads:
             t.join()
-        '''
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = []
-            futures.append(executor.submit(search_two_clients))
-            futures.append(executor.submit(connect_to_client))
-            futures.append(executor.submit(connect_to_client))
-            for t in concurrent.futures.as_completed(futures):
-                print(future.result())
-        '''
-
+        
 
 def connect_to_client():
     global player_num
@@ -63,24 +55,55 @@ def connect_to_client():
     p=Player(player_num,packet,address,Client)
     players.append(p)
     while player_num<2:
-        print("waiting for second player...")
+        #print("waiting for second player...")
         time.sleep(1)
     starts_game(p)
 
 def starts_game(player):
     global players
+    global final_Message
+    global has_answer
     time.sleep(3) #10 seconds timer until the game begins
-    Player_Message="PLEASE GET OFF THIS PORT!!!!!!!!!!!!!!!!!!!!!\nWelcome to Quick Maths.\n"
+    Player_Message="Welcome to Quick Maths.\n"
     for p in players:
         Player_Message+="Player "+str(p.number)+": "+str(p.name)
     Player_Message+="==\nPlease answer the following question as fast as you can:\nHow much is 2+2?\n"
     player.client.send(Player_Message.encode())
     #add 10 seconds timer for answer
-    print("waiting for char....")
-    time.sleep(10) #10 seconds timer until the game begins
-    answer = player.client.recv(1024).decode()
-    print(player.name , answer)
+    #print("waiting for char....")
+    #time.sleep(10) #10 seconds timer until the game begins
+    readable, empty, empt = select.select([player.client], [], [] , 5 ) # wait just 5sec 
+    if not readable and not has_answer:
+        final_Message="Game over!\nThe correct answer was "+answer+"!\nThe game finished with a DRAW\n"
+    elif not has_answer:
+        has_answer=True
+        client = readable[0]
+        answer = client.recv(1024).decode()
+        print(player.name,answer)
+        if (answer=="4"):
+            final_Message="Game over!\nThe correct answer was "+answer+"!\nnCongratulations to the winner: "+player.name
+        else:
+            other_player = ""
+            for p in players:
+                if p.name!=player.name:
+                    other_player = p.name
+            final_Message="Game over!\nThe correct answer was "+answer+"!\nCongratulations to the winner: "+ other_player
+    player.client.send(final_Message.encode())
 
+'''
+def timer():
+    global my_threads
+    while player_num<2:
+        time.sleep(1)
+    while player_num==2:
+        print("in while 1")
+        time.sleep(5) #the game
+        #now 10 sec is over
+        print("GAME OVER")
+        for t in my_threads:
+            t.stop()
+
+'''
 
 def search_two_clients():
     global player_num
@@ -88,9 +111,7 @@ def search_two_clients():
     print("Server started, listening on IP address "+str(host))
     # socket.AF_INET -> ask for protocol IPv4
     # socket.SOCK_STREAM -> ask for TCP connection
-    #tcp_server.bind((host,port))
-    message = struct.pack('>IbH',0xabcddcba,0x2,port) 
-    #Magic cookie (4 bytes): 0xabcddcba
+    message = struct.pack('>IbH',0xabcddcba,0x2,port)  #Magic cookie (4 bytes): 0xabcddcba
     while player_num<2: #TO CHANGE
         udp_server.sendto(message, ('<broadcast>', 13117)) 
         #print("message sent!")
