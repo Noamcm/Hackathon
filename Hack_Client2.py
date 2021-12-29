@@ -4,8 +4,9 @@ import scapy.all as sc
 import sys, errno
 from getch import getch, getche
 from termcolor import colored, cprint
+from multiprocessing import Process, Manager
 
-my_name = "Shiri\n"
+my_name = "DumbAss\n"
 
 def search_offer():
     #this function searches for server's offer
@@ -58,19 +59,35 @@ def connecting_to_server(ip,port):
         
 def gameMode(tcp_server):
     #this function contains the fuctionality of the client's game mode
-    char = getche() #get the first char that was written, without enter being pressed
+    manager = Manager()
+    l = manager.list()
+    p1 = Process(target=get_char, args=(l,tcp_server))
+    p2 = Process(target=recieve_res, args=(l,tcp_server))
+    p1.start()
+    p2.start()
+    while len(l)==0:
+        time.sleep(1)    
+    p1.terminate()
+    #p2.close()
+    print(colored("Server disconnected, listening for offer requests...",'magenta'))
+    
+def get_char(lst,tcp_server):
     try:
+        char = getche() #get the first char that was written, without enter being pressed
+        lst.append(char)
         tcp_server.sendto(char.encode(),tcp_server.getpeername()) #send the answer to the server
     except IOError as er:
         if er.errno == errno.EPIPE:
             print(colored("recieved error: (" + str(er) + ") in sending data to server in game mode",'red'))
+
+def recieve_res(lst,tcp_server):
     try:
         data = str(tcp_server.recv(1024).decode()) #get server's results of the game
+        lst.append(data)
     except socket.error as er:
         print(colored("recieved error: (" + str(er) + ") in recieving data from server in game mode"),'red')
         return
     cprint(data, 'green', attrs=['bold'])
-    print(colored("Server disconnected, listening for offer requests...",'magenta'))
 
 #main:
 while True: #so the client will get more offers after finishing a game with a server

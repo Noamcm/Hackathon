@@ -31,13 +31,12 @@ def main():
     '''
     global qa
     try:
-        qa = {"How much is 2+2":"4","How much is 0:3":"0","( 2 , 4 , 6 , _ ) -> What comes next":"8","How much is (2x8-6):5 ":"2","What is 1 in binary?":"1","How much is 3^(4)÷3^(2) ":"2","What should be x so the equation 15+(-5x) is correct":"3","How much is 9-3/(1/3)+1 ":"1","How much is 8÷2(1+1) ":"2"}
+        qa = {"How much is 2+2":"4"}
+        #qa = {"How much is 2+2":"4","How much is 0:3":"0","( 2 , 4 , 6 , _ ) -> What comes next":"8","How much is (2x8-6):5 ":"2","What is 1 in binary?":"1","How much is 3^(4)÷3^(2) ":"2","What should be x so the equation 15+(-5x) is correct":"3","How much is 9-3/(1/3)+1 ":"1","How much is 8÷2(1+1) ":"2"}
         start_print=True
         while True: 
-            #players=[] 
             global host,port,udp_server,tcp_server,player_num,players,my_threads,final_Message,has_answer
             host,port,udp_server,tcp_server,player_num,players,my_threads,final_Message,has_answer=init_servers()
-            #print("starting main")
             q=get_random_q()
             my_threads.append(Thread(target=search_two_clients,args=(start_print,)))
             my_threads.append(Thread(target=connect_to_client ,args=(q,)))
@@ -109,6 +108,8 @@ def connect_to_client(q):
         packet = Client.recv(1024).decode()
         player_num+=1
         p=Player(player_num,packet,address,Client)
+        print ("Add: " , address)
+        print ("name: " , packet)
         players.append(p)
         while player_num<2:
             #print("waiting for second player...")
@@ -124,11 +125,13 @@ def starts_game(player,q):
     when the forst answer arrive it will announce the player about the winner.
     '''
     global players,final_Message,has_answer
-    time.sleep(10) #10 seconds timer until the game begins
+    time.sleep(3) #10 seconds timer until the game begins
     Player_Message="Welcome to Quick Maths.\n"
     for p in players:
         Player_Message+="Player "+str(p.number)+": "+str(p.name)
     Player_Message+="==\nPlease answer the following question as fast as you can:\n"+q+"?\n"
+    
+    #Player_Message="AGENT .P. GET OFF THIS PORT!!!!!!!\n"
     try:
         player.client.send(Player_Message.encode())
     except IOError as er:
