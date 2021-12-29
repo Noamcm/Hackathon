@@ -69,7 +69,7 @@ def init_servers():
     try:
         tcp_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         tcp_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #to avoid OSError: [Errno 98] Address already in use
-        tcp_server.bind((host,port))
+        tcp_server.bind(("",port)) #host
         tcp_server.listen(2) 
     except socket.error as er:
         print(colored("recieved error: (" + str(er) + ") in init_servers - tcp_server",'red'))
@@ -183,7 +183,7 @@ def search_two_clients(boolean):
             print(colored("Game over, sending out offer requests...",'magenta'))
         # socket.AF_INET -> ask for protocol IPv4
         # socket.SOCK_STREAM -> ask for TCP connection
-        message = struct.pack('>IbH',0xabcddcba,0x2,port)  #Magic cookie (4 bytes): 0xabcddcba
+        message = struct.pack("IbH",0xabcddcba,0x2,port)  #Magic cookie (4 bytes): 0xabcddcba
         while player_num<2: #TO CHANGE
             udp_server.sendto(message, ('172.1.255.255', 13117))  #<broadcast>
             time.sleep(1)

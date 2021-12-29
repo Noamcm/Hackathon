@@ -12,7 +12,7 @@ my_name = "SmartAss\n"
 def search_offer():
     #this function searches for server's offer
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         #s.bind(('172.99.255.255',13117))
         s.bind(('',13117))
@@ -21,12 +21,12 @@ def search_offer():
         curr_ip=0
         while True: #curr_port!=2068: # ???
             try:
-                packet = s.recvfrom(13117)  #recieve an offer
-                if str(packet[0]).startswith(r"b'\xab\xcd\xdc\xba\x02"): #checks Magic Cookie and Message type prefix
-                    unpacked = struct.unpack('>IbH',packet[0])
-                    curr_port=unpacked[2]
-                    curr_ip=packet[1][0]
-                    break
+                packet,add = s.recvfrom(1024)  #recieve an offer
+                #if str(packet).startswith(r"b'\xab\xcd\xdc\xba\x02"): #checks Magic Cookie and Message type prefix
+                unpacked = struct.unpack('IbH',packet)
+                curr_port=unpacked[2]
+                curr_ip=add[0]
+                break
             except struct.error as e:
                 print(colored("recieved error: ("+str(e)+") from port: " +str(curr_port) ,'red')) ##?????????
                 return
