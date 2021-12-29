@@ -9,6 +9,8 @@ import select
 import struct
 import scapy.all
 import random
+import sys, errno
+from termcolor import colored
 
 
 class Player:
@@ -29,7 +31,8 @@ def main():
     '''
     global qa
     try:
-        qa = {"How much is 2+2":"4","How much is 0:3":"0","( 2 , 4 , 6 , _ ) -> What comes next":"8"}
+        qa = {"How much is 2+2":"4","How much is 0:3":"0","( 2 , 4 , 6 , _ ) -> What comes next":"8","How much is (2x8-6):5 ":"2","What is 1 in binary?":"1","(3^(4)÷3^(2
+        qa+={"How much is 3^(4)÷3^(2) ":"2","What should be x so the equation 15+(-5x) is correct":"3","How much is 9-3/(1/3)+1 ":"1","How much is 8÷2(1+1) ":"2"}
         start_print=True
         while True: 
             #players=[] 
@@ -47,7 +50,7 @@ def main():
             start_print=False
             close_servers()
     except socket.error as er:
-        print("recieved error: (" + str(er) + ") in main")
+        print(colored("recieved error: (" + str(er) + ") in main",'red'))
         return
 
 
@@ -62,7 +65,7 @@ def init_servers():
         udp_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         udp_server.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     except socket.error as er:
-        print("recieved error: (" + str(er) + ") in init_servers - udp_server")
+        print(colored("recieved error: (" + str(er) + ") in init_servers - udp_server",'red'))
         return
     try:
         tcp_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -70,7 +73,7 @@ def init_servers():
         tcp_server.bind((host,port))
         tcp_server.listen(2) 
     except socket.error as er:
-        print("recieved error: (" + str(er) + ") in init_servers - tcp_server")
+        print(colored("recieved error: (" + str(er) + ") in init_servers - tcp_server",'red'))
         return
     player_num=0
     my_threads=[]
@@ -88,12 +91,12 @@ def close_servers():
     try: 
         udp_server.close()
     except socket.error as er:
-        print("recieved error: (" + str(er) + ") in closing udp_server")
+        print(colored("recieved error: (" + str(er) + ") in closing udp_server",'red'))
         return
     try: 
         tcp_server.close()
     except socket.error as er:
-        print("recieved error: (" + str(er) + ") in closing tcp_server")
+        print(colored("recieved error: (" + str(er) + ") in closing tcp_server",'red'))
         return
 
 
@@ -113,7 +116,7 @@ def connect_to_client(q):
             time.sleep(1)
         starts_game(p,q)
     except socket.error as er:
-        print("recieved error: (" + str(er) + ") in connect_to_client")
+        print(colored("recieved error: (" + str(er) + ") in connect_to_client",'red'))
         return
 
 def starts_game(player,q):
@@ -122,25 +125,19 @@ def starts_game(player,q):
     when the forst answer arrive it will announce the player about the winner.
     '''
     global players,final_Message,has_answer
-    try:
-        time.sleep(3) #10 seconds timer until the game begins
-        Player_Message="Welcome to Quick Maths.\n"
-        for p in players:
-            Player_Message+="Player "+str(p.number)+": "+str(p.name)
-        Player_Message+="==\nPlease answer the following question as fast as you can:\n"+q+"?\n"
-    except socket.error as er:
-        print("recieved error: (" + str(er) + ") in starts_game")
-        return
+    time.sleep(10) #10 seconds timer until the game begins
+    Player_Message="Welcome to Quick Maths.\n"
+    for p in players:
+        Player_Message+="Player "+str(p.number)+": "+str(p.name)
+    Player_Message+="==\nPlease answer the following question as fast as you can:\n"+q+"?\n"
     try:
         player.client.send(Player_Message.encode())
     except IOError as er:
         if er.errno == errno.EPIPE:
-            print("recieved error: (" + str(er) + ") in communicating with tcp server")
+            print(colored("recieved error: (" + str(er) + ") in communicating with tcp server with client: "+ player.name,'red'))
         return
     try:
         readable, empty, empt = select.select([player.client], [], [] , 10 ) # wait just 5sec 
-        print(has_answer)
-        print(readable)
         if not readable and not has_answer:
             final_Message="\nGame over!\nThe correct answer was "+qa.get(q)+"!\nThe game finished with a DRAW\n"
         elif not has_answer:
@@ -149,7 +146,7 @@ def starts_game(player,q):
             answer = client.recv(1024).decode()
             #print(player.name,answer)
             if (answer==qa.get(q)):
-                final_Message="\nGame over!\nThe correct answer was "+qa.get(q)+"!\nnCongratulations to the winner: "+player.name
+                final_Message="\nGame over!\nThe correct answer was "+qa.get(q)+"!\nCongratulations to the winner: "+player.name
             else:
                 other_player = ""
                 for p in players:
@@ -158,13 +155,13 @@ def starts_game(player,q):
                 final_Message="\nGame over!\nThe correct answer was "+qa.get(q)+"!\nCongratulations to the winner: "+ other_player
 
     except socket.error as er:
-        print("recieved error: (" + str(er) + ") in starts_game")
+        print(colored("recieved error: (" + str(er) + ") in starts_game",'red'))
         return
     try:
         player.client.send(final_Message.encode())
     except IOError as er:
         if er.errno == errno.EPIPE:
-            print("recieved error: (" + str(er) + ") in communicating with tcp server")
+            print(colored("recieved error: (" + str(er) + ") in communicating with tcp server with client: "+ player.name,'red'))
         return
 
 def search_two_clients(boolean):
@@ -174,9 +171,9 @@ def search_two_clients(boolean):
     global host,port,udp_server,player_num
     try:
         if boolean:
-            print("Server started, listening on IP address "+str(host))
+            print(colored("Server started, listening on IP address "+str(host),'magenta'))
         else:
-            print("Game over, sending out offer requests...")
+            print(colored("Game over, sending out offer requests...",'magenta'))
         # socket.AF_INET -> ask for protocol IPv4
         # socket.SOCK_STREAM -> ask for TCP connection
         message = struct.pack('>IbH',0xabcddcba,0x2,port)  #Magic cookie (4 bytes): 0xabcddcba
@@ -185,7 +182,7 @@ def search_two_clients(boolean):
             #print("message sent!")
             time.sleep(1)
     except socket.error as er:
-        print("recieved error: (" + str(er) + ") in search_two_clients")
+        print(colored("recieved error: (" + str(er) + ") in search_two_clients",'red'))
         return
 
 def get_random_q():
