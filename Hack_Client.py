@@ -36,13 +36,13 @@ def connecting_to_server(ip,port):
     print(colored("Received offer from "+str(ip)+", attempting to connect...",'magenta'))
     try:
         tcp_server= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        host=socket.gethostbyname(socket.gethostname())
-        tcp_server.connect((host,port))
+        #host=socket.gethostbyname(socket.gethostname())
+        tcp_server.connect((ip,port))
     except socket.error as er:
         print(colored("recieved error: (" + str(er) + ") in connecting to tcp server",'red'))
         return
     try:
-        tcp_server.sendto(my_name.encode(), (host,port)) #send client's name to the server 
+        tcp_server.sendto(my_name.encode(), (ip,port)) #send client's name to the server 
     except IOError as er:
         if er.errno == errno.EPIPE:
             print(colored("recieved error: (" + str(er) + ") in sending data to server with tcp server",'red'))

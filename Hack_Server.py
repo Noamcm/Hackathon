@@ -31,8 +31,7 @@ def main():
     '''
     global qa
     try:
-        qa = {"How much is 2+2":"4","How much is 0:3":"0","( 2 , 4 , 6 , _ ) -> What comes next":"8","How much is (2x8-6):5 ":"2","What is 1 in binary?":"1","(3^(4)÷3^(2
-        qa+={"How much is 3^(4)÷3^(2) ":"2","What should be x so the equation 15+(-5x) is correct":"3","How much is 9-3/(1/3)+1 ":"1","How much is 8÷2(1+1) ":"2"}
+        qa = {"How much is 2+2":"4","How much is 0:3":"0","( 2 , 4 , 6 , _ ) -> What comes next":"8","How much is (2x8-6):5 ":"2","What is 1 in binary?":"1","How much is 3^(4)÷3^(2) ":"2","What should be x so the equation 15+(-5x) is correct":"3","How much is 9-3/(1/3)+1 ":"1","How much is 8÷2(1+1) ":"2"}
         start_print=True
         while True: 
             #players=[] 
