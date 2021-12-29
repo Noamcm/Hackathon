@@ -7,7 +7,7 @@ from termcolor import colored, cprint
 from multiprocessing import Process, Manager
 import select
 
-my_name = "SmartAss\n"
+my_name = "Noam&Shiri\n"
 
 def search_offer():
     #this function searches for server's offer

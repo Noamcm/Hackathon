@@ -59,7 +59,8 @@ def init_servers():
     '''
     port=2068
     #host=socket.gethostbyname(socket.gethostname())
-    host=scapy.all.get_if_addr('eth1')
+    #host=scapy.all.get_if_addr('eth1')
+    host=scapy.all.get_if_addr('eth2')
     try:
         udp_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         udp_server.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -140,7 +141,7 @@ def starts_game(player,q):
     try:
         current=time.time()
         while time.time()<current+10:
-            readable, empty, empt = select.select([player.client], [], [] , 1 ) # wait just 5sec 
+            readable, empty, empt = select.select([player.client], [], [] , 1 )  
             if not readable and not has_answer and time.time()>=current+10:
                 final_Message="\nGame over!\nThe correct answer was "+qa.get(q)+"!\nThe game finished with a DRAW\n"
                 break
@@ -155,7 +156,7 @@ def starts_game(player,q):
                 else:
                     other_player = ""
                     for p in players:
-                        if p.name!=player.name:
+                        if p.client!=player.client:
                             other_player = p.name
                     final_Message="\nGame over!\nThe correct answer was "+qa.get(q)+"!\nCongratulations to the winner: "+ other_player
                     break
